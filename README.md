@@ -24,8 +24,8 @@ theprogram.py reads from a short text file in RAM (/dev/shm/input.txt) at about 
 #### Things to prepare your Raspberry Pi or Raspberry Pi Zero
 - For the Raspberry Pi Zero, you should enable audio out on one of the GPIO pins in order to use TTS (see: PWM1 on GPIO #13 (ALT0) for RasPi Zero W). 
 - Make sure Apache, PHP, Python, SSMPT, mjpeg-streamer, eSpeak, and the Adafruit_ADS1x15 Python library are installed for FULL functionality.
-- Make "thecode.py" run on startup. Put the following in /etc/rc.local
 - Enable i2c and ssh
+- Make "thecode.py" run on startup. Put the following in /etc/rc.local
 ```
 #my telepresence bot code
 sleep 30s
