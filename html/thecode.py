@@ -23,6 +23,7 @@ Basic operation:
 	from the bot using MJPEG-Streamer. 
 
 More information can be found on thestuffwebuild.com
+- Michael H.
 '''
 
 ############## Begin Library Imports and User Setup ##############
