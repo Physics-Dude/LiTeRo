@@ -3,13 +3,13 @@
 
 This python sketch is used in conjunction with phraser.php and litero.html to make a little RasPi-powered rover scoot around and do stuff.
 
-#### Features included by default:
+#### Features included by default (Used GPIO pins also listed):
 - MJPEG Streamer
   - 160-175deg Wide Angle Camera Module with White/IR LED modules For Raspberry Pi (Banggood)
 - RPi.GPIO
   - HG7881 (L9110) Dual Channel Motor Driver (GPIO Pins 17, 18, 22, 27)
   - Navigation LED (2N2222 mod for White/IR LED module) (GPIO Pin 23)
-  - Servo control!
+  - Servo control! (Optional, not used by default. Pin 19)
 - eSpeak Text-To-Speech
   - LM4871 audio amp conected to GPIO pin #13 (see: PWM1 on GPIO #13 (ALT0) for RasPi Zero W) 
 - MinIMU-9 (I2C x2)
