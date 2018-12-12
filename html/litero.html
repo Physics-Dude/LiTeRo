@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html>
+	<!---------------------------------------------- Note ----------------------------------------------->
+	<!--
+	TODO
+	- track guides/static retcile ?
+	- tidy up 
+	-->
+
+	<!---------------------------------------------- Head --------------------------------------------->
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+	
+	<!--------------------------------------------- Title --------------------------------------------->
+	<title>Little Telepresence Robot</title>
+	
+	<!---------------------------------------------- CSS ---------------------------------------------->
+	<style>
+		body {
+		    font-family: monospace;
+		    overflow: hidden;
+		    padding: 0;
+		    margin: 0;
+		    background-color: #333335;
+		    font-size: 3vmin;
+		    -webkit-user-select: none;		    /* Webkit */
+		    -moz-user-select: none;		    /* Firefox */
+		    -ms-user-select: none;		    /* IE 10  */
+		    -o-user-select: none;
+		    user-select: none;
+		}
+		
+		#stream {
+		    position: fixed;
+		    z-index: -99999;
+		    left: 0;
+		    top: 0;
+		    width: 100%;
+		    height: 100%;
+		    background-image: url("./test.gif");
+		    background-repeat: no-repeat;
+		    background-size: contain;
+		    background-position: top;
+		}
+		
+		/*Splash screen*/
+		#splash {
+			width:      100%;
+			height:     100%; 
+			z-index:    100;
+			top:        0; 
+			left:       0; 
+			position:   fixed;
+		    color: white;
+		    text-align: center;
+		    background-color: rgba(0, 0, 0, 0.9);
+		}
+		#splash p {
+		    font-size: 0.5em;
+		    margin: 2em;
+		}
+		#splash h1, h2, h3, h4, h5, h6 {
+		    margin-top: 0.3em;
+		    margin-bottom: 0em;
+		}
+		#splash img {
+		    width: 50vmin;
+		}
+		
+		/*main page and sub stuff*/
+		#main {
+		    position: absolute;
+		    top: 0;
+		    width: 100%;
+		    height: 100% padding: 0;
+		    text-align: center;
+		}
+		#container {
+		    position: fixed;
+		    left: 0;
+		    top: 0;
+		    height: 100vh;
+		    overflow: hidden;
+		    padding: 0;
+		    margin: 0;
+		    -webkit-user-select: none;
+		    -moz-user-select: none;
+		}
+		.header {
+		    position: fixed;
+		    top: 0;
+		    width: 100%;
+		}
+		.menubtn {
+		    font-size: 1em;
+		    cursor: pointer;
+		    margin: 0 auto;
+		    background-color: rgba(0, 0, 0, 0.25);
+		    border-bottom-left-radius: 0.5em;
+		    border-bottom-right-radius: 0.5em;
+		    padding: 0.1em 0.5em;
+		    padding-top: 1em;
+		    width: 1em;
+		    display: inline;
+		    color: white;
+		    text-shadow: 0 0 0.3em black;
+		}
+		.sidebar {
+		    pointer-events: none;
+		    position: fixed;
+		    top: -0.5em;
+		    right: 0;
+		    height: 100%;
+		    padding: 1em;
+		    display: inline-block;
+		}
+		.sidebarbtn {
+		    pointer-events: initial;
+		    font-size: 1em;
+		    cursor: pointer;
+		    margin: 0.5em 0;
+		    background-color: rgba(0, 0, 0, 0.25);
+		    border-radius: 0.5em;
+		    padding: 0.5em;
+		    width: 5em;
+		    display: block;
+		    color: white;
+		    text-shadow: 0 0 0.3em black;
+		}
+		#speakBox {
+		    visibility: hidden;
+		    background-color: rgba(0, 0, 0, 0.3);
+		    border-radius: 1em;
+		    color: white;
+		    position: fixed;
+		    white-space: nowrap;
+			padding: 0.5em 1em 1em 1em;
+		    top: 50%;
+		    left: 50%;
+		    -ms-transform: translateX(-50%) translateY(-50%);
+		    -webkit-transform: translate(-50%, -50%);
+		    transform: translate(-50%, -50%);
+		    z-index: 10;
+		}
+		#notSoundBoardBtn {
+		    visibility: hidden;
+		    position: fixed;
+		    display: block;
+		    margin-left: 0;
+		    margin-top: -6em;
+		    width: 100vmax;
+		    height: 110vmax;
+		    z-index: 9;
+		}
+		.foot {
+		    position: fixed;
+		    bottom: 1em;
+		    width: 100%;
+		}
+		#XMLstats {
+		    font-size: 1em;
+		    color: white;
+		    background-color: rgba(127, 127, 127, 0.3);
+		    border-radius: 0.5em;
+		    padding: 0.5em 1em;
+		    margin: 0 auto;
+		    display: inline;
+		    text-shadow: 0 0 0.3em black;
+		}
+		#debugvars {
+		    text-align: left;
+		    position: fixed;
+		    left: 1em;
+		    top: 1em;
+		    padding: 0.5em;
+		    background-color: rgba(0, 0, 0, 0.25);
+		    border-radius: 0.5em;
+		    font-family: monospace;
+		    color: white;
+		    z-index: -100;
+		}
+		#arrowCont {
+		 position: fixed;
+		    bottom: 1em;
+		    left:1em;
+		    visibility:hidden;
+		    text-shadow: 0 0 0.3em black;
+		    color:white;
+		    padding:0;
+		    width:3em;
+		}
+		
+		/*CSS popup menu overlay*/
+		.overlay {
+		    height: 0;
+		    width: 100%;
+		    position: fixed;
+		    z-index: 1;
+		    top: 0;
+		    left: 0;
+		    background-color: rgb(0, 0, 0);
+		    background-color: rgba(0, 0, 0, 0.3);
+		    overflow-y: hidden;
+		    transition: height 0.5s;
+		    text-align: center;
+		}
+		.overlay-content {
+		    position: relative;
+		    height: 100%;
+		    width: 100%;
+		    text-align: center;
+		}
+		.overlay .notMenu {
+		    position: absolute;
+		    display: block;
+		    width: 100%;
+		    height: 100%;
+		    top: 0;
+		    left: 0;
+		    z-index: 11;
+		}
+		
+		/*CSS Settings menu*/
+		.w3c {
+		    position: relative;
+		    z-index: 12;
+		    width: 26em;
+		    font-size: inherit;
+		    height: 11em; /*roughly 4 2em lines plus 2em tabs*/
+		}
+		.w3c > div {
+		    display: inline;
+		    text-align: left;
+		}
+		.w3c > div > a {
+		    margin-left: -0.1em; 
+		    position: relative;
+		    left: 0.1em;
+		    text-decoration: none;
+		    color: black;
+		    background: white;
+		    display: block;
+		    float: left;
+		    padding: 0.25em 0.5em;
+		    border: 0.1em solid #ddd;
+		    border-bottom: 0.1em solid white;
+		    border-top-left-radius: 0.5em;
+		    border-top-right-radius: 0.5em;
+		    border: 0;
+		}
+		.w3c > div:not(:target) > a {
+		    border-bottom: 0;
+		    background: -moz-linear-gradient(top, white, #ddd);
+		}
+		.w3c > div:target > a {
+		    background: white;
+		}
+		.w3c > div > div {
+		    background: white;
+		    z-index: 1;
+		    left: 0;
+		    top: 1.5em;
+		    right: 0;
+		    padding: 0.5em 1em;
+		    border: 0;
+		    border-bottom-left-radius: 0.5em;
+		    border-bottom-right-radius: 0.5em;
+		    border-top-right-radius: 0.5em;
+		}
+		.w3c > div:not(:target) > div {
+		    position: absolute;
+		}
+		.w3c > div:target > div {
+		    position: absolute;
+		    z-index: 2;
+		}
+		.intab_settings {
+		    width: 100%;
+		    height: 100%;
+		    font-size: inherit;
+			border-collapse: collapse;
+		    table-layout: fixed;
+		}
+		.intab_cell {
+		position:relative;
+		display:block;
+		    height: 2em;
+		    /*border: 0.1em solid #ddd;*/
+		    padding:0;
+		}
+		.setting_div {
+		    margin: 2em;
+		    display: inline-block;
+		    overflow: hidden;
+		    white-space: nowrap;
+		}
+		.subtext {
+		    display: block;
+		    position: relative;
+		    margin: 0.5em;
+		    font-size: 0.5em;
+		    color: white;
+		    text-shadow: 0 0 0.3em black;
+		    z-index: 12;
+		}
+		
+		/*General input styling*/
+		.speed_slide {
+		    height: .5em;
+		    padding: 0;
+		    margin: 0;
+		    width: 8em;
+		}
+		.gen_box {
+		    padding: 0;
+		    margin: 0;
+		    font-size: inherit;
+		    height: 2em;
+		}
+		.gen_text_box {
+		    padding: 0;
+		    margin: 0;
+		    font-size: inherit;
+		    width: 10em;
+		    height: 2em;
+
+		}
+		.gen_button {
+		    padding: 0 0.5em;
+		    margin: 0;
+		    font-size: inherit;
+		    height: 2em;
+		}
+		.gen_number {
+		    padding: 0 0.5em;
+		    margin: 0;
+		    font-size: inherit;
+		    width: 3em;
+		    height: 2em;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="container"></div>
+	<div id="stream"></div>
+	
+	<!----------------------------------------- Splash Screen ----------------------------------------->
+	<div id="splash" onclick="closeSplash()" title="Click anywhere to begin.">
+		<h1> Welcome to LiTeRO</h1>
+		<h6>(Little Telepresence RObot)</h6>
+		<p><b><u>How to</u></b>: Use <u>W S A D</u>, the <u>arrow keys</u>, or <u>click and drag</u> anywhere in this browser window to move around.
+			<br/><br/><u>F</u>: toggle flashlight | <u>Y</u>: open text-to-speech | <u>R</u>: repeat phrase
+			<br/><br/>
+			<h6>- - - Click anywhere to begin - - -</h6>
+			<br/>
+			<img src="robot.png" alt="Picture of robot Friend" class="splashImg">
+			<h3 style="position: absolute;bottom:-2em;width:100%;color:rgba(255,255,255, 0.3)">w o w !</h3>
+	</div>
+	
+	<!------------------------------------- Settings Menu Overlay ------------------------------------->
+	<div id="myNav" class="overlay">
+		<div class="overlay-content">
+			<div class="setting_div">
+				<div class="w3c">
+				
+				<!--------------------------------------- First Tab (Tab 1) --------------------------------------->
+					<div id="tab1">	<a href="#tab1">Control</a>
+						<div style="z-index:2;">
+							<table class="intab_settings">
+								<tbody>
+								
+									<!--------------------------------------------- Row 1 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Set the desired maximum drive speed (motor PWM) percentage. ">Drive Speed:
+											<input type="range" id="speed" class="speed_slide" value="90" onmousemove="updateUI()" onchange="updateUI()"> <span id="speedSliderDispVal">NaN</span>%</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 2 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Nothing is here">
+											<!--Trim:
+											<input type="range" id="" class="speed_slide" value="50" onmousemove="" onchange=""> <span id="">+/-NaN</span>%-->
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 3 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Nothing is here">
+											<!--Anti-tip:<button type="button" class="gen_button" id="" onclick="">Off</button> -->
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 4 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" style="text-align:right;" title="Allows you to keep this page open while not using data resources. Requires refresh to resume.">Log Off:
+											<button type="button" class="gen_button" onclick="logOff()">Click</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					
+					<!-------------------------------------- Second Tab (Tab 2) --------------------------------------->
+					<div id="tab2">	<a href="#tab2">Video</a>
+						<div>
+							<table class="intab_settings">
+								<tbody>
+								
+								<!--------------------------------------------- Row 1 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Select desired stream size/preformance and press 'Set'. (Small numbers = fast preformance) ">Video Stream:
+											<select id="camSelect" class="gen_box" onchange="updateUI()">
+												<option value="1">144p@15fps</option>
+												<option value="2">240p@15fps</option>
+												<option value="3">480p@15fps</option>
+												<option value="4">720p@15fps</option>
+												<option value="0">Custom</option>
+											</select>&nbsp;
+											<button type="button" class="gen_button" title="Send changes to camera." onclick="camDo()">Set</button>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 2 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Select 'Custom' from the above drop-down to create a custom camera profile. ">
+											<div id="customCam">Y:
+												<input class="gen_number" type="number" id="camY" value="144">FPS:
+												<input class="gen_number" type="number" id="camFPS" value="15">Quality:
+												<input class="gen_number" type="number" id="camQ" value="10">
+											</div>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 3 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Change how your browser resizes and renders images. ">Image Rendering:
+											<button type="button" class="gen_button" id="scalingBtn" onclick="imageScaling()">Soft</button>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 4 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Anable or disable digital compas HUD element in the lower left. Shortcut: Press C" style="text-align:right;">Compas:
+											<button type="button" class="gen_button" id="compasBtn" onclick="compasFn()">Show</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					
+					<!--------------------------------------- Third Tab (Tab 3) --------------------------------------->
+					<div id="tab3">	<a href="#tab3">Advanced</a>
+						<div>
+							<table class="intab_settings">
+								<tbody>
+								
+								<!--------------------------------------------- Row 1 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="How often you want to ask for new XML data.">
+											<div>XML Pull Frequency
+												<select class="gen_box" id="XMLPullFreqBox" onchange="sendFn()">
+													<option value="500">0.5sec (fast)</option>
+													<option value="1000" selected="selected">1sec (normal)</option>
+													<option value="3000">3sec (slow)</option>
+													<option value="86400000">Stop Pulling</option>
+												</select>
+											</div>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 2 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Show/Hide a whole bunch of nerdy stuff. Shortcut: Press X">Debug Values:
+											<button id="debug_switch" class="gen_button" type="button" onclick="debug()">Show</button>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 3 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Have you tried turning it off and on again?">Quick fix:
+											<button class="gen_button" type="button" onClick="window.location.reload()">Reload Page</button>
+										</td>
+									</tr>
+									
+									<!--------------------------------------------- Row 4 --------------------------------------------->
+									<tr>
+										<td class="intab_cell" title="Nothing is here">&nbsp;</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				
+				<!-------------------------------------- Text below tab menu -------------------------------------->
+				<div class="subtext">
+					<p title="If there are issues, press F5. If you do not have a keyboard, borrow one."><b><u>How to</u></b>: Use <u>W S A D</u>, the <u>arrow keys</u>, or <u>click and drag</u> to move around.
+						<br/><u>F</u>: toggle flashlight | <u>Y</u>: open text-to-speech | <u>R</u>: repeat phrase</p>
+					
+					<p title="*wihtin reason..."><i>Click anywhere to exit this menu.</i>
+					</p>
+				</div>
+			</div>
+		</div>
+		<div class="notMenu" onclick="closeNav()" title="Return to main page."></div>
+	</div>
+	
+	<!----------------------------------------- Main Page GUI ----------------------------------------->
+	<div id="main">
+	
+		<!------------------------- The top part of page. Houses the menu button -------------------------->
+		<div class="header">
+			<span class="menubtn" id="menubtn" onclick="openNav()" title="Opens a menu for changing settings. ">&#9776;</span>
+		</div>
+		
+		<!------------------ The Right part of the page. Houses buttons for LED and TTS ------------------->
+		<div class="sidebar">
+			<span class="sidebarbtn" id="navLEDstate" title="Toggle the navigation LED headlight on/off. (You can also press F)" onclick="navLEDfn('toggle')">LED NaN</span>
+			<span class="sidebarbtn" id="speakMenu" title="Opens a text-to-speach soundboard that makes the robot talk. (You can also press E to repeat the last phrase spoken)" onclick="openSpeakMenu()">SPEAK</span>
+		</div>
+		
+		<!------------------- The speach box popup for writing and sending TTS phrases -------------------->
+		<div id="speakBox">
+			<h4>Type something to say.</h4>
+			<br/>
+			<input type="text" id="TTSTextBox" class="gen_text_box" maxlength="140" value="Hello. I use eSpeak.">
+			<button id="soundBoardBtn" class="gen_button" type="button" onclick="speakFn()" title="Send the speach command.">Speak</button>
+		</div>
+		
+		<!------------- The background of the speach box popup. Used for closing said popup --------------->
+		<div id="notSoundBoardBtn" onclick="closeSpeakMenu()" title="Return to main page."></div>
+		
+		<!----------- Debug variable window. Used to show cool stats about the client and host ------------>	
+		<span id="debugvars" hidden title="Neat, eh?">
+		<b>Local:</b><br/>
+		<span title="">JoyX = <span id="resultX">NaN</span></span><br/>	
+		<span title="">JoyY = <span id="resultY">NaN</span></span><br/>	
+		<span title="">Focus = <span id="focus">NaN</span></span><br/>	
+		<span title="">M1 Cmd = <span id="M1">NaN</span></span><br/>	
+		<span title="">M2 Cmd = <span id="M2">NaN</span></span><br/>	
+		<span title="">Keymap = <span id="keymap">NaN</span></span><br/>	
+		<span title="">DataCall = <span id="dataCall">NaN</span></span><br/>	
+		<span title="">Buffer = <span id="buffSize">NaN</span></span><br/>	
+		<br/>	
+		<b>Host:</b><br/>	
+		<span title="">Volts = <span id="volts">NaN</span></span><br/>	
+		<span title="">Amps = <span id="amps">NaN</span> </span><br/>	
+		<span title="">Heading = <span id="heading">NaN</span></span><br/>	
+		<span title="">RSSI = <span id="rssi">NaN</span> </span><br/>	
+		<span title="">Ping = <span id="pingBox">NaN</span></span><br/>	
+		<span title="">Users = <span id="numberofusers">NaN</span></span><br/>	
+		<span style="font-size: 0.5em;color:gray;">Press X to show/hide this.</span>
+		</span>
+		
+		<!------ The bottom part of the main page. Houses the activity status and other HUD elements ------>
+		<div class="foot">	<span id="XMLstats" title="Status and warnings are shown here. These include; Current Activity, Battery Status, WiFi Status, and more.">Not Ready</span>
+			<div id="arrowCont"><span title=""><span id="compasHeading">NaN</span>&#176;N</span>
+			</div>
+		</div>
+	</div>
+	
+	<!---------------------------------- Load VirtualJoystick script. --------------------------------->
+	<script src="./virtualjoystick.js"></script>
+	
+	<!------------------------------- Main scripts for running the show. ------------------------------>
+	<script>
+		"use strict";
+			
+		//User Vars.
+		var usePasswd = false;
+		var setPassword = 'password';
+		var lowRSSI = -80; // Low WiFi RSSI for HTML client display only.
+		var critRSSI = -85; // Critical WiFi RSSI for HTML client display only.
+		var lowVolts = 3.4; // Low battery volts for HTML client display only.
+		var critVolts = 3.2; // Critical battery volts for HTML client display only.
+		var dockedThresholdAmps = 0.3 // If robot is drawing less than this, say we are docked/charging. Typical non-docked current is ~500mA.
+		var idleDelay = 3000; // ms till declare idle client
+		var maxBuff = 4; // Maximum requests to stack up
+
+		// ID calls for LED headlight elements 
+		var ledBtn = document.getElementById("navLEDstate");
+		
+		// ID calls for text-to-speech elements
+		var TTSBtn = document.getElementById("soundBoardBtn");
+		var TTSMenu = document.getElementById("speakMenu").style;
+		var TTSTextBox = document.getElementById("TTSTextBox");
+		var speakPopup = document.getElementById("speakBox");
+		var speakBackground = document.getElementById("notSoundBoardBtn");
+		
+		// Id calls for camera setting elements
+		var camPresetSelest = document.getElementById("camSelect");
+		var cc = document.getElementById('customCam');
+		var camYBox = document.getElementById("camY");
+		var camFPSBox = document.getElementById("camFPS");
+		var camQBox = document.getElementById("camQ");
+		
+		// ID calls for speed slide UI elements
+		var speedSlide = document.getElementById("speed");
+		var speedSlideReadout = document.getElementById("speedSliderDispVal");
+		
+		// ID calls for XML status bar elements
+		var XMLStatusBar = document.getElementById("XMLstats");
+		
+		// ID calls for main stream image/video elements
+		var mainStreamMJPG = document.getElementById("stream");
+		var buttonText = document.getElementById("scalingBtn");
+		
+		// ID calls for debug table elements
+		var m1Debug = document.getElementById("M1");
+		var m2Debug = document.getElementById("M2");
+		var pingBox = document.getElementById("pingBox");
+		var noOfUsersBox = document.getElementById("numberofusers");
+		var dataCallBox = document.getElementById("dataCall");
+		var buffSizeBox = document.getElementById("buffSize");
+		var xResultBox = document.getElementById('resultX');
+		var yResultBox = document.getElementById('resultY');
+		var keymapBox = document.getElementById("keymap");
+		var info = document.getElementById("focus"); 
+		var debugState = document.getElementById("debug_switch");
+		var debugvars = document.getElementById("debugvars");
+		var ampsBox = document.getElementById("amps")
+		var voltsBox = document.getElementById("volts");
+		var headingBox = document.getElementById("heading");
+		var rssiBox = document.getElementById("rssi");
+		
+		// ID calls for XML pull frequency elements
+		var XMLPullFreqBox = document.getElementById("XMLPullFreqBox");
+		
+		// ID calls for splash screen elements
+		var splashScreen = document.getElementById("splash");
+		
+		// ID calls for settigs menu elements
+		var settingsMenu = document.getElementById("myNav");
+		
+		// ID calls for compass elements
+		var arricont = document.getElementById('arrowCont');
+		var compasBtn = document.getElementById("compasBtn");
+		var compassHeading = document.getElementById("compasHeading");
+		
+		// Global vars
+		var ID = Math.floor(Math.random() * 1000000)+1; // Unique ID for client
+		var IWANTDATA; // This is a 1 if we are requesting new XML data.
+		var updateAuxVars;  // This is a 1 if we are requesting the navigation LED and other GPIO outs to turn on.
+		var updateStream; // This is a 1 if we are requesting new camera settings.
+		var updateTTSVars; // This is a 1 if we are sending a new text-to-speech phrase.
+		var clientCmd; // This is a 1 if we are sending updated motor commands
+		var speakVal = ""; // This holds the text string we are going to send for text-to-speech 
+		var camY; // This stores camera Y pixels variable
+		var camFPS; // This stores camera FPS variable
+		var camQ; // This stores camera quality variable
+		var m1 = 0; // This holds the left motor speed we want to request.
+		var m2 = 0; // This holds the right motor speed we want to request.
+		var navLED = 0; // This holds the current state of the navigation LED.
+		var precamHASH = 0; // This number chenges every time hte camera settings succussfuly change.
+		var volts; // This is the battery volts returned from the robot's XML data
+		var amps; // This is the battery amps returned from the robot's XML data
+		var heading; // This is the magnetic heading returned from the robot's XML data
+		var rssi; // This is the WiFi signal strength returned from the robot's XML data
+		var idle = 0; // This is a 1 if the client does not do anything for a few seconds.
+		var idleTimer; // This counts how long the client has been idle for.
+		var pingStart; // This marks the start of a server request
+		var sendDelay; // This is how long we need to wait before we send A new request.
+		var lastDataCheckTime = 0; // This records the last time a request was made.
+		var XMLPullFreq = 0; // How often we want to pull for new XML data
+		var fullSpeed; // Saves the "sprint" state
+		var prefullSpeed; // Records the last state of the "sprint" bit
+		var buffCount = 0; // Counter for number of requests we are waiting to hear back form.
+		var TTSBoxOpen; // Records the state of the text-to-speech box.
+		
+		/******************************** Update User Interface Function ***********************************/
+		/****************************** Keeps things snappy and up to date *********************************/
+		function updateUI() {
+		
+			var levelSelect = camPresetSelest.options[camPresetSelest.selectedIndex].value;
+			
+			// Camera presets fill disabled text boxes with desired config from drop down menu.
+			if (levelSelect == 0) { // Custom option, so enable text boxes
+				camYBox.disabled = false;
+				camFPSBox.disabled = false;
+				camQBox.disabled = false;
+				cc.style.color = "initial";
+			}
+			else if (levelSelect == 1) { // Low option, change numerical inputs to match
+				camYBox.value = 144;
+				camFPSBox.value = 15;
+				camQBox.value = 10;
+			}
+			else if (levelSelect == 2) { // Medium option, change numerical inputs to match
+				camYBox.value = 240;
+				camFPSBox.value = 15;
+				camQBox.value = 10;
+			}
+			else if (levelSelect == 3) { // High option, change numerical inputs to match
+				camYBox.value = 480;
+				camFPSBox.value = 15;
+				camQBox.value = 10;
+			}
+			else if (levelSelect == 4) { // Very high option, change numerical inputs to match
+				camYBox.value = 720;
+				camFPSBox.value = 15;
+				camQBox.value = 10;
+			}
+			
+			// Disable text boxes if non-custom preset is selected.
+			if (levelSelect != 0) { 
+				camYBox.disabled = true;
+				camFPSBox.disabled = true;
+				camQBox.disabled = true;
+				cc.style.color = "gray";
+			}
+			
+			// Set global vars from values in number select boxes.
+			camY = camYBox.value;
+			camFPS = camFPSBox.value;
+			camQ = camQBox.value;
+			
+			// Update speed slider readout.
+			speedSlideReadout.innerHTML = speedSlide.value;
+			
+			// Management for the status bar to show robot status
+			var statusString = ''; // Importand status readouts are appended to this string
+			var statusColor = 0;
+			
+			// If robot is drawing less than 300mA, say we are docked/charging. Typical power consumtion off-dock is 400-500mA
+			if (amps < dockedThresholdAmps && volts != 0) {
+				statusString = statusString + "Docked";
+				statusColor = 'rgba(0,0,255, 0.3)'; //bright blue
+			}
+			
+			// If robot is not docked, show that we are active or idle using idle timer bit.
+			else {
+				if (buffCount < maxBuff && idle == 1 && m1 == 0 && m2 == 0) {
+					statusString = statusString + "Standby";
+					statusColor = 'rgba(0,127,0, 0.3)'; //green
+				}
+				else {
+					statusString = statusString + "Active";
+					statusColor = 'rgba(0,127,0, 0.3)'; //green
+				}
+			}
+			
+			// Update status bar according to battery volts.
+			if (volts < lowVolts && volts > critVolts) { 
+				// Append low battery red bit
+				statusString = statusString + " | Low Battery";
+				statusColor = 'rgba(255,140,0, 0.3)'; //orange
+			}
+			else if (volts <= critVolts && volts > 0.1) {
+				// Append Critical battery red bit
+				statusString = statusString + " | Critical Battery!";
+				statusColor = 'rgba(127,0,0, 0.3)'; //red
+			}
+			
+			// Update status bar according to WiFi RSSI.
+			if (rssi < lowRSSI && rssi > critRSSI) {
+				// Append low signal red bit
+				statusString = statusString + " | Low Signal";
+				statusColor = ((statusColor != 'rgba(127,0,0, 0.3)') ? 'rgba(255,140,0, 0.3)' : 'rgba(127,0,0, 0.3)'); //make orange if not red
+			}
+			else if (rssi <= critRSSI) {
+				// Append Critical signal red bit
+				statusString = statusString + " | Critical Signal!";
+				statusColor = 'rgba(127,0,0, 0.3)'; //red
+			}
+			
+			// Find and print string to HTML element.
+			XMLStatusBar.innerHTML = statusString;
+			XMLStatusBar.style.backgroundColor = statusColor;
+		}
+	
+		/********************************* Update mjpeg Stream Function ************************************/
+		/************************ Refreshes stream image when camera hash changes **************************/
+		function updateMJPGStream() {
+			mainStreamMJPG.style.backgroundImage = "url('http://" + window.location.hostname + ":8080/?action=stream" + "&nocache=" + (new Date).getTime() + "')";
+		}
+	
+		/************************************** Idle timer Function ****************************************/
+		/******************************** Pushes for new camera settings ***********************************/
+		function camDo() { //Oooo yeah, caaan doo!
+			// We are going to want to send the full request to get cam hash data
+			IWANTDATA = 1;
+			
+			// Tell the main loop that it can send a camera settings command
+			updateStream = 1;
+			sendFn();
+		}
+		
+		/************************************** Idle timer Function ****************************************/
+		/********************************* keeps track of client activity **********************************/
+		function resetIdle(){
+			idle = 0;
+			clearTimeout(idleTimer);
+			idleTimer = setTimeout(function () {
+				idle = 1;
+			}, idleDelay);
+		}
+		
+		/************************************* Motor Control Function **************************************/
+		/******************************* Scales and requests motion commands *******************************/
+		var oldmb1;
+		var oldmb2;
+		var haltMotion;
+		var halted;
+		function move(mb1, mb2) {
+			// If we get a non-number inout, use the last used motion command.
+			if (isNaN(mb1) || isNaN(mb1)) {
+				mb1 = oldmb1;
+				mb2 = oldmb2;
+			}
+			
+			var speed = speedSlide.value;
+			
+			// If sprint key is pressed, set speed to 100%
+			if (fullSpeed == 1) {
+				speed = 100;
+			}
+			
+		
+			
+			// Scale left/right motor speeds to speed %
+			speed = speed / 100;
+			m1 = Math.round(mb1 * speed);
+			m2 = Math.round(mb2 * speed);
+			
+			// Send stop again if there is no other input for 250ms. This prevents runnaways at the cost of one extra 88 byte transfer every stop.
+			if(m1==0&&m2==0){
+				if(halted==0){
+					clearTimeout(haltMotion);
+					halted=1;
+					haltMotion = setTimeout(function () {move(0, 0);}, 250);
+				}
+			}
+			else{
+				halted = 0
+				clearTimeout(haltMotion);
+			}
+			
+			// Tell the main loop that it can send a motion command
+			clientCmd = 1;
+			sendFn(); // This sends the data
+			
+			// Reset idle timer
+			resetIdle();
+			
+			// Update debug table with calculated motor speeds
+			m1Debug.innerHTML = m1;
+			m2Debug.innerHTML = m2;
+			
+			// Update the old motor commands
+			oldmb1 = mb1;
+			oldmb2 = mb2;
+		}
+		
+		/************************************* Main Command Function **************************************/
+		/***************************** Parses XML data and sends XML requests *****************************/
+		var inMotion
+		var preinMotion;
+		function sendFn() {
+			// Update user interface to prevent showing stale values
+			updateUI();
+			
+			// Get current time as var
+			var currentTime = (new Date).getTime();
+			
+			// Find out how often we want new XML data
+			var XMLPullFreq = XMLPullFreqBox.value;	
+
+			// If/when we get a complete responce from server, parse all the XML data
+			var xrequest = new XMLHttpRequest();
+			xrequest.onreadystatechange = function () {
+				if (xrequest.readyState == 4 && xrequest.status == 200) {
+				
+					// We are no longer waiting for OK responce. Update ping box readout (delay between send request and this).
+					pingBox.innerHTML = (new Date).getTime() - pingStart;
+							
+					// Reset the buffer counter
+					buffCount = 0;
+					
+					// If XML data is retured, read and fill in values:
+					if (xrequest.responseXML != null) {
+					
+						// Reads the <ST> tag from the XML data. This is 1 if the last command was a motion command.
+						inMotion = xrequest.responseXML.getElementsByTagName('ST')[0].childNodes[0].nodeValue;
+						
+						// Compair current responce with previous response and do something if descrepancy
+						if (inMotion < preinMotion) {
+							move("null", "null");
+							//TCP packets likely recieved out of order. Send last move again to be safe.
+						}
+						preinMotion = inMotion;
+						
+						// If we got a full XML data responce (not just <ST>), update vars and fields
+						if (xrequest.responseText.length >= 80) {
+							
+							// Get battery volts
+							volts = xrequest.responseXML.getElementsByTagName('Vo')[0].childNodes[0].nodeValue;
+							voltsBox.innerHTML = volts;
+							// Get battery amps
+							amps = xrequest.responseXML.getElementsByTagName('Am')[0].childNodes[0].nodeValue;
+							ampsBox.innerHTML = amps;
+							
+							// Get compass heading
+							heading = xrequest.responseXML.getElementsByTagName('He')[0].childNodes[0].nodeValue;
+							headingBox.innerHTML = heading;
+							
+							// Get WiFi signal strength
+							rssi = xrequest.responseXML.getElementsByTagName('SS')[0].childNodes[0].nodeValue;
+							rssiBox.innerHTML = rssi;
+							
+							// Get LED state and update the LED button UI
+							var currenLEDstate = xrequest.responseXML.getElementsByTagName('LED')[0].childNodes[0].nodeValue;
+							navLED = currenLEDstate;
+							if (navLED == 0) {
+								ledBtn.innerHTML = "LED OFF"
+								ledBtn.style.color = "white"; //not disabled
+							}
+							else {
+								ledBtn.innerHTML = "LED AUTO"
+								ledBtn.style.color = "white"; //not disabled
+							}
+							
+							// Get the number of active users
+							var noUsers = xrequest.responseXML.getElementsByTagName('Us')[0].childNodes[0].nodeValue;
+							noOfUsersBox.innerHTML = noUsers;
+							
+							// Get the unique camera hash ID. This changes every time camera settings are changed.
+							var camHASH = xrequest.responseXML.getElementsByTagName('CH')[0].childNodes[0].nodeValue;
+							if (camHASH != precamHASH) {
+								updateMJPGStream();
+								precamHASH = camHASH;
+							}
+							
+							// Housekeeping
+							updateUI();
+							
+							// reset TTS string
+							if (speakVal != '') {
+								speakVal = '';
+								updateTTSVars = 1;
+							}
+							
+							// Enable speak button again
+							else {
+								TTSBtn.disabled = false;
+								TTSMenu.color = "white"; //not disabled
+							}
+						}
+					}
+				}
+			};
+			
+			// If it is time to ask for XML data again, set the IWANTDATA var to 1.
+			if (currentTime - lastDataCheckTime > XMLPullFreq) {
+				IWANTDATA = 1;
+				lastDataCheckTime = currentTime;
+			}
+			
+			// Update debug section with data request state
+			dataCallBox.innerHTML = IWANTDATA;
+			
+			// If buffer counter is not full, then we are not waiting for data (OK responce), so send a request and wait.
+			if (buffCount < maxBuff) {
+				// Start building the request string
+				
+				// Create XML request string if we want full XML data
+				var IWANTDATAstring = '';
+				if (IWANTDATA == 1) {
+					IWANTDATAstring = "&GIMMIE=" + IWANTDATA;
+					IWANTDATA = 0;
+				}
+				
+				// Create camera settings request string if we want to change camera settings
+				var XcameraVars = '';
+				if (updateStream == 1) {
+					updateStream = 0
+					XcameraVars = "&CAY=" + camY + "&CAF=" + camFPS + "&CAQ=" + camQ;
+				}
+				
+				// Create driving variables string if we want to change vector 
+				var drivingVars = '';
+				if (clientCmd == 1) {
+					clientCmd = 0;
+					drivingVars = "&M1=" + m1 + "&M2=" + m2;
+				}
+				
+				// Create auxelry variables string if we want to update LED or the like
+				var auxVars = '';
+				if (updateAuxVars == 1) {
+					updateAuxVars = 0;
+					auxVars = "&LED=" + navLED;// + "&SRV=" + servoPos;
+				}
+				
+				// Create text-to-speech string if we want to say something
+				var TTSVars = '';
+				if (updateTTSVars == 1) {
+					updateTTSVars = 0;
+					TTSVars = "&TTS=" + speakVal;
+				}
+				
+				// Append strings and send the request
+				xrequest.open("PUT", "phraser.php?ID=" + ID + "&CT=" + currentTime + drivingVars + auxVars + TTSVars + XcameraVars + IWANTDATAstring, true);
+				xrequest.send();
+				xrequest.onerror = function () {
+					alert("Network Error...");
+				}
+				
+				// We sent the data, so add one to the buffer counter
+				buffCount++;
+				
+				// Start of ping timer.
+				pingStart = (new Date).getTime();
+			}
+			
+			// Update the debug section with the buffer counter size
+			buffSizeBox.innerHTML = buffCount + "/" + maxBuff;
+			
+			//This timer fires this function again in XMLPullFreq miliseconds. 
+			clearTimeout(sendDelay);
+			sendDelay = setTimeout(function () {
+				sendFn();
+			}, XMLPullFreq);
+		}
+	
+		/******************************* Toggle Navigation LED Function ***********************************/
+		/********************* Toggles HUD elements and sends LED toggle command  *************************/
+		function navLEDfn(x) {
+			if (x == "toggle") {
+				if (navLED != 0) {
+					navLED = 0;
+					ledBtn.innerHTML = "LED OFF"
+					ledBtn.style.color = "gray"; //disabled
+				}
+				else {
+					navLED = 1;
+					ledBtn.innerHTML = "LED AUTO"
+					ledBtn.style.color = "gray"; //disabled
+				}
+			}
+			
+			// Tell the main loop that it can send an LED toggle command
+			updateAuxVars = 1;
+			sendFn();
+			
+			// Poke idle timer
+			resetIdle();
+			
+		}
+		
+		/******************************** Text-to-Speech (TTS) Function ***********************************/
+		/************* Prepares TTS phrases for main loop and hides speak button till spoken  *************/
+		function speakFn() {
+			// Get the text string from the text box and store it as a variable 
+			var textBoxVal = TTSTextBox.value;
+			
+			// Remove special characters and store it as a new variable
+			speakVal = textBoxVal.replace(/[^a-zA-Z.,?!0-9\s]/gi, '')
+			
+			// Compair new string with old and alert client if their string contains weird charictors 
+			if (textBoxVal != speakVal) {
+				speakVal = "";
+				alert("Warning... Only Letters, Numbers, and '.?!,' are allowed. Please try again.");
+			}
+			
+			// If the text string is good, disable the button and close the speak menu
+			else {
+				TTSBtn.blur(); //loose focus on tts button input
+				TTSBtn.disabled = true;
+				TTSMenu.color = "gray"; //disabled
+				closeSpeakMenu();
+			}
+			
+			// Tell the main loop that it can send a TTS command
+			updateTTSVars = 1;
+			sendFn();
+			
+			// Poke idle timer
+			resetIdle();
+		}
+	
+		/********************************* Client Image Render Function ***********************************/
+		/********* Allows client to change the way their browser scales images (pixely or fuzzy) **********/
+		function imageScaling() {
+			// Update button and change scaling to default
+			if (buttonText.innerHTML == "Sharp") {
+				buttonText.innerHTML = "Soft";
+				mainStreamMJPG.style.imageRendering = "initial";
+			}
+			
+			// Update button and change scaling to sharp
+			else {
+				buttonText.innerHTML = "Sharp";
+				mainStreamMJPG.style.msInterpolationMode = "nearest-neighbor"; // IE 7+ (non-standard property)
+				mainStreamMJPG.style.imageRendering = "-webkit-optimize-contrast"; // Safari 6, UC Browser 9.9
+				mainStreamMJPG.style.imageRendering = "-webkit-crisp-edges"; // Safari 7+
+				mainStreamMJPG.style.imageRendering = "-moz-crisp-edges"; // Firefox 3.6+
+				mainStreamMJPG.style.imageRendering = "-o-crisp-edges"; // Opera 12
+				mainStreamMJPG.style.imageRendering = "pixelated"; // Chrome 41+ and Opera 26+
+			}
+		}
+		
+		/************************************ Close Splash Function ***************************************/
+		/******************************** Neatly hides the splash screen **********************************/
+		function closeSplash() {
+			splashScreen.style.transition = "0.75s";
+			splashScreen.style.top = "-115vh";
+			splashScreen.style.display = "hidden";
+		}
+		
+		/******************************* Settings Menu Overlay Functions **********************************/
+		/****************************** Shows and hides the settings menu *********************************/
+		function openNav() {settingsMenu.style.height = "100%";}
+		function closeNav() {settingsMenu.style.height = "0";}
+		
+		/********************************* Speak Box Overlay Functions ************************************/
+		/************************* Shows and hides the text-to-speech text box ****************************/
+		function openSpeakMenu() {
+			speakPopup.style.visibility = "visible";
+			speakBackground.style.visibility = "visible";
+			TTSTextBox.select();
+			TTSBoxOpen = true;
+		}
+		function closeSpeakMenu() {
+			speakPopup.style.visibility = "hidden";
+			speakBackground.style.visibility = "hidden";
+			TTSTextBox.blur();
+			TTSBoxOpen = false;
+		}
+	
+		/********************************* Compass HUD Element Function ***********************************/
+		/***************** Avgerages and prints a magnetic compass readout on the screen ******************/
+		var compasFnDly;
+		var compasAvgX = 0;
+		var compasAvgY = 0;
+		function compasFn() {
+			// Clear loop timer to prevent stacking of function
+			clearInterval(compasFnDly);
+			
+			// If we are showing the compass, calculate a running avgerage and update the show/hide button.
+			if (compasBtn.innerHTML == "Show") {
+				arricont.style.visibility = "visible";
+				compasBtn.innerHTML = "Hide";
+				
+				// Main compass avgeraging loop
+				compasFnDly = setInterval(function () {
+					// Convert reading to radians 
+					var theta = heading / 180.0 * 3.1415;
+					
+					// Running average
+					compasAvgX = compasAvgX * .75 + Math.cos(theta) * .25;
+					compasAvgY = compasAvgY * .75 + Math.sin(theta) * .25;
+					
+					// Convert to degrees
+					theta = Math.atan2(compasAvgY, compasAvgX) / 3.1415 * 180;
+					
+					// Shift result from +/-180 to 0-360. 
+					if (theta < 0) theta += 360;
+					
+					// Draw compass HUD element
+					compassHeading.innerHTML = Math.round(theta);
+				}, 100);
+			}
+			
+			// Hide the compass and update button if disabled. 
+			else {
+				arricont.style.visibility = "hidden";
+				compasBtn.innerHTML = "Show";
+				clearInterval(compasFnDly);
+			}
+		}
+		
+		/***************************************** Joystick Setup *****************************************/
+		/*************** Set up Virtual Joystick variables (mostly for virtualjoystick.js)*****************/
+		var Xout; // Filtered joystick x
+		var Yout; // Filtered joystick y
+		var threshold = 10; // Joy output should only increment by this discrete amount. Scale is 100.
+		var joystick = new VirtualJoystick({
+			container: document.getElementById('container'),
+			mouseSupport: true,
+			limitStickTravel: true,
+			stickRadius: 100, // Max joystick scale
+			strokeStyle: '#aaa' // Joystick color
+		});
+		
+		/*********************************** Joystick Math Function ***************************************/
+		/**************** Converts X/Y joystick position to vehicle movment every 100ms *******************/
+		var preXout = 0;
+		var preYout = 0;
+		setInterval(function () {
+			// Read the joystick position as vars EX and WY and devide by the threshold
+			var EX = joystick.deltaX() / threshold;
+			var WY = joystick.deltaY() / threshold;
+			
+			// Truncate and scale joystick position to get descrete filtered X/Y variables
+			Xout = Math.trunc(EX) * threshold * 1.5;
+			Yout = Math.trunc(WY) * threshold * 1.5 * -1; //invert y
+			
+			// Print filtered joystick Variables to the debug section
+			xResultBox.innerHTML = Xout;
+			yResultBox.innerHTML = Yout;
+			
+			// If there was a change in the joystick position, update left/right motor speeds 
+			if (Xout != preXout || Yout != preYout) {
+				preXout = Xout;
+				preYout = Yout;
+				
+				// Convert X/Y values to left/right motor commands
+				var pm1 = Yout + Xout;
+				var pm2 = Yout - Xout;
+				
+				// Cap min/max motor speeds
+				if (pm1 > 100) {
+					pm1 = 100;
+				}
+				else if (pm1 < -100) {
+					pm1 = -100
+				}
+				if (pm2 > 100) {
+					pm2 = 100
+				}
+				else if (pm2 < -100) {
+					pm2 = -100
+				}
+				
+				// Send movment command
+				move(pm1, pm2);
+			}
+		}, 100);
+		
+		
+		/**************************************** Key Pull Function ***************************************/
+		/*************** Reads a public keymap every 100ms and initiates movment commands *****************/
+		var keyMap = [0, 0, 0, 0];
+		var prekeyMap = "0,0,0,0";
+		var keyPullInt;
+		function keyPull() {
+			// Clear loop timer so function dosen't stack.
+			clearTimeout(keyPullInt);
+			
+			// Read the keymap as a string
+			var keyString = keyMap.toString();
+			
+			// If keyString has changed from previous, send movment command in disered direction.
+			if (keyString == "0,0,0,0" && prekeyMap != keyString) { //stop
+				prekeyMap = keyString;
+				move(0, 0);
+			}
+			else if (keyString == "1,0,0,0" && prekeyMap != keyString) { //forward
+				prekeyMap = keyString;
+				move(100, 100);
+			}
+			else if (keyString == "0,1,0,0" && prekeyMap != keyString) { //backward
+				prekeyMap = keyString;
+				move(-100, -100);
+			}
+			else if (keyString == "0,0,1,0" && prekeyMap != keyString) { //spin left
+				prekeyMap = keyString;
+				move(-100, 100);
+			}
+			else if (keyString == "0,0,0,1" && prekeyMap != keyString) { //spin right
+				prekeyMap = keyString;
+				move(100, -100);
+			}
+			else if (keyString == "1,0,1,0" && prekeyMap != keyString) { //forward left
+				prekeyMap = keyString;
+				move(0, 100);
+			}
+			else if (keyString == "1,0,0,1" && prekeyMap != keyString) { //forward right
+				prekeyMap = keyString;
+				move(100, 0);
+			}
+			else if (keyString == "0,1,1,0" && prekeyMap != keyString) { //back left
+				prekeyMap = keyString;
+				move(-100, 0);
+			}
+			else if (keyString == "0,1,0,1" && prekeyMap != keyString) { //back right
+				prekeyMap = keyString;
+				move(0, -100);
+			}
+			else if (keyString != prekeyMap) {
+				// Illeagal key combo
+			}
+			else {
+				// Pass
+			}
+			
+			// If sprint key changes state, send null move request to update values.
+			if (prefullSpeed != fullSpeed && keyString != "0,0,0,0") {
+				prefullSpeed = fullSpeed;
+				move("null", "null");
+			}
+			
+			// Print the keystring in debug section
+			keymapBox.innerHTML = keyString;
+			
+			// Loop this function at 10hz
+			keyPullInt = setTimeout(function () {
+				keyPull();
+			}, 100);
+		}
+		
+		/*************************************** Onkeydown Function ***************************************/
+		/**************************** Checks for state changes on various keys ****************************/
+		var navLEDKeyDown = 0;
+		var debugKeyDown = 0;
+		var compasKeyDown = 0;
+		window.onkeydown = function (e) {
+			// Only do this if the text-to-speech textbox is not open
+			if (TTSBoxOpen != true) {
+				var kc = e.keyCode;
+				
+				// Direction keys
+				if (kc === 38 || kc === 87) //w or up
+					keyMap[0] = 1; //up
+				if (kc === 40 || kc === 83) //s or down
+					keyMap[1] = 1; //down
+				if (kc === 37 || kc === 65) //a or left
+					keyMap[2] = 1; //left
+				if (kc === 39 || kc === 68) //d or right
+					keyMap[3] = 1; //right
+					
+				// "Sprint" key
+				if (kc === 16) //shift
+					fullSpeed = 1;
+					
+				// Repeate speech phrase
+				if (kc === 82 && TTSBtn.disabled == false) { //r
+					TTSBtn.disabled = true;
+					speakFn(); // Send speak command
+				}
+				
+				// Flashlight key
+				if (kc === 70 && navLEDKeyDown == 0) { //f
+					navLEDKeyDown = 1;
+					navLEDfn("toggle"); // Toggle led
+				}
+				
+				// Show debug key
+				if (kc === 88 && debugKeyDown == 0) { //x
+					debugKeyDown = 1;
+					debug();
+				}
+				
+				// Show compas key
+				if (kc === 67 && compasKeyDown == 0) { //c
+					compasKeyDown = 1;
+					compasFn();
+				}
+				
+				// Key state has changed. Update the keymap.
+				keyPull();
+			}
+		};
+		
+		/**************************************** Onkeyup Function ****************************************/
+		/**************************** Checks for state changes on various keys ****************************/
+		window.onkeyup = function (e) {
+			// Only do this if the text-to-speech textbox is not open
+			if (TTSBoxOpen != true) {
+				var kc = e.keyCode;
+				
+				// Direction keys
+				if (kc === 38 || kc === 87) //w or up
+					keyMap[0] = 0; //up
+				if (kc === 40 || kc === 83) //s or down
+					keyMap[1] = 0; //down
+				if (kc === 37 || kc === 65) //a or left
+					keyMap[2] = 0; //left
+				if (kc === 39 || kc === 68) //d or right
+					keyMap[3] = 0; //right
+					
+				// "Sprint" key
+				if (kc === 16) //shift
+					fullSpeed = 0;
+					
+				// Show speech menu key
+				if (kc === 89) //y
+					openSpeakMenu();
+					
+				// Flashlight toggle
+				if (kc === 70 && navLEDKeyDown == 1) //f
+					navLEDKeyDown = 0;
+					
+				// Show debug key
+				if (kc === 88) //x
+					debugKeyDown = 0;
+					
+				// Show compass key 
+				if (kc === 67)  //c
+					compasKeyDown = 0;
+					
+				// Show options key
+				if (kc === 79)  //o
+					openNav();
+					
+				// Key state has changed. Update the keymap.
+				keyPull();
+			}
+		};
+		
+		/********************************** Speak Box Enter Key Function **********************************/
+		/************** Sends speak command when the enter key is pressed from the text box ***************/
+		TTSTextBox.onkeypress = function (e) {
+			if (e.keyCode == 13) { //enter
+				speakFn(); // Send speak command
+			}
+		}
+		
+		/*********************************** Check Page Focus Function ************************************/
+		/***** Checks focus every 200ms and nullifies the keymap if the user looses focus to the page *****/
+		function checkPageFocus() {
+			if (document.hasFocus()) {
+				info.innerHTML = "Yes";
+			}
+			else {
+				info.innerHTML = "No";
+				keyMap = [0, 0, 0, 0]; // Clear the keymap
+			}
+		}
+		setInterval(checkPageFocus, 200);
+		
+		/************************************** Onmousedown Function **************************************/
+		/************** Nullifies the keymap if the user looses focus to a right-click menu ***************/
+		window.onmousedown = function () {
+			keyMap = [0, 0, 0, 0]; // Clear the keymap
+			move("null","null");
+		};
+
+		/**************************************** Log On Function *****************************************/
+		/******************* Initiates the main loop and provides simple crowd control ********************/
+		function logOn() {
+			// Simple pass/fail password prompt
+			if (usePasswd){
+				var pwd = prompt('Please enter your password:', '');
+				if(pwd != null && pwd != '' && pwd == setPassword) {
+					move(0,0); // This primes some vars and starts the main sendFn loop.
+					// Setup other stuff here?
+				}
+				else{
+					alert('incorrect password');
+					logOff();
+				}
+			}
+			else{
+				move(0,0); // This primes some vars and starts the main sendFn loop.
+			}
+		}
+		
+		/*************************************** Log Off Function *****************************************/
+		/**************************** Stops the main loop and locks the page ******************************/
+		function logOff() {
+			// Set stream to a static placeholder image
+			mainStreamMJPG.style.backgroundImage = "url('./test.gif')"
+			
+			// Stop the main XML polling timer
+			clearTimeout(sendDelay);
+			
+			// Disable all inputs
+			var inputs = document.getElementsByTagName("INPUT");
+			for (var i = 0; i < inputs.length; i++) {
+				if (inputs[i].type === 'submit') {
+					inputs[i].disabled = true;
+				}
+			}
+			
+			// Throw in a crowbar
+			maxBuff = -1;
+			
+			// Leave (if the user wants to)
+			if (confirm("Disconnecting... Do you want to leave this page?") == true) {
+				document.location.href = 'http://www.thestuffwebuild.com';
+				//alert("bye");
+			}
+			alert("Disconnected... Refresh this page to log back on.");
+		}
+		
+		/************************************** Show Debug Function ***************************************/
+		/********************** Shows/hides a series of local and remote variables ************************/
+		function debug() {
+			if (debugState.innerHTML != 'Hide') {
+				debugState.innerHTML = 'Hide';
+				debugvars.style.display = 'block';
+			}
+			else {
+				debugState.innerHTML = 'Show';
+				debugvars.style.display = 'none';
+			}
+		}
+		
+		/*************************************** Onload Function ******************************************/
+		document.body.onload = function () {
+			logOn();
+		}
+		
+		/************************************** On Unload Function ****************************************/
+		document.body.unload = function () {
+			logOff();
+		}
+		
+	</script>
+	
+</body>
+</html>
