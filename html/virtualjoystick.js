@@ -1,3 +1,6 @@
+
+// Derived from: jeromeetienne/virtualjoystick.js
+
 var VirtualJoystick	= function(opts)
 {
 	opts			= opts			|| {};
